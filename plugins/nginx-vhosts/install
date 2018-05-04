@@ -20,7 +20,7 @@ case "$DOKKU_DISTRO" in
     echo "%dokku ALL=(ALL) NOPASSWD:/usr/bin/systemctl reload nginx, /usr/sbin/nginx -t" > /etc/sudoers.d/dokku-nginx
     ;;
 
-  centos|rhel)
+  centos|rhel|amzn)
     echo "%dokku ALL=(ALL) NOPASSWD:/usr/bin/systemctl reload nginx, /usr/sbin/nginx -t" > /etc/sudoers.d/dokku-nginx
     echo "Defaults:dokku !requiretty" >> /etc/sudoers.d/dokku-nginx
     ;;
@@ -111,7 +111,7 @@ case "$DOKKU_DISTRO" in
     "$NGINX_INIT" nginx start || "$NGINX_INIT" nginx reload
     ;;
 
-  arch|centos|rhel)
+  arch|centos|rhel|amzn)
     NGINX_INIT="/usr/bin/systemctl"
     "$NGINX_INIT" start nginx || "$NGINX_INIT" reload nginx
     ;;

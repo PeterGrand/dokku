@@ -98,7 +98,7 @@ install-dokku-from-package() {
     debian|ubuntu)
       install-dokku-from-deb-package "$@"
       ;;
-    centos|rhel)
+    centos|rhel|amzn)
       install-dokku-from-rpm-package "$@"
       ;;
     *)
