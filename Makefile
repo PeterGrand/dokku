@@ -38,6 +38,7 @@ all:
 
 install: dependencies version copyfiles plugin-dependencies plugins
 
+install-amzn: dependencies-yum version copyfiles plugin-dependencies plugins-yum
 
 packer:
 	packer build contrib/packer.json
@@ -79,7 +80,7 @@ ifndef SKIP_GO_CLEAN
 	$(MAKE) go-clean
 endif
 	chown dokku:dokku -R ${PLUGINS_PATH} ${CORE_PLUGINS_PATH} || true
-	$(MAKE) addman
+	$(MAKE) addman-yum
 
 copyplugin:
 ifndef PLUGIN_NAME
@@ -102,6 +103,11 @@ addman: help2man man-db
 	help2man -Nh help -v version -n "configure and get information from your dokku installation" -o /usr/local/share/man/man1/dokku.1 dokku
 	mandb
 
+addman-yum: help2man-yum man-db-yum
+	mkdir -p /usr/local/share/man/man1
+	help2man -Nh help -v version -n "configure and get information from your dokku installation" -o /usr/local/share/man/man1/dokku.1 dokku
+	mandb
+
 version:
 ifeq ($(DOKKU_VERSION),master)
 	git describe --tags > ~dokku/VERSION  2> /dev/null || echo '~${DOKKU_VERSION} ($(shell date -uIminutes))' > ~dokku/VERSION
@@ -115,7 +121,13 @@ plugin-dependencies: plugn
 plugins: plugn docker
 	sudo -E dokku plugin:install --core
 
+plugins-yum: plugn docker-yum
+	sudo -E dokku plugin:install --core
+
 dependencies: apt-update sshcommand plugn docker help2man man-db sigil
+	$(MAKE) -e stack
+
+dependencies-yum: plugn docker-yum help2man-yum man-db-yum sigil
 	$(MAKE) -e stack
 
 apt-update:
@@ -124,8 +136,14 @@ apt-update:
 help2man:
 	apt-get install -qq -y help2man
 
+help2man-yum:
+	yum install -y help2man
+
 man-db:
 	apt-get install -qq -y man-db
+
+man-db-yum:
+	yum install -y man-db
 
 sshcommand:
 	wget -qO /usr/local/bin/sshcommand ${SSHCOMMAND_URL}
@@ -139,6 +157,13 @@ plugn:
 sigil:
 	wget -qO /tmp/sigil_latest.tgz ${SIGIL_URL}
 	tar xzf /tmp/sigil_latest.tgz -C /usr/local/bin
+
+docker-yum:
+	yum install -y curl
+	egrep -i "^docker" /etc/group || groupadd docker
+	usermod -aG docker dokku
+	yum install -y docker
+	sleep 2 # give docker a moment i guess
 
 docker:
 	apt-get install -qq -y curl
